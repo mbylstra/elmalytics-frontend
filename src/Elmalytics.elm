@@ -9,7 +9,8 @@ import Array exposing (Array)
 
 
 
-import Html exposing (div, h1, text, p, node)
+import Html exposing (div, h1, text, p, node, img, h2, h3)
+import Html.Attributes exposing (src, class, class)
 
 import Array
 import Decoders exposing (totalsByMonthDecoder)
@@ -82,11 +83,51 @@ type Msg =
 
 style : String
 style = """
+
+
+  @import url('https://fonts.googleapis.com/css?family=Cormorant+Garamond:400,700');
   body {
     font-family: sans-serif;
     margin: 20px;
     text-size: 10px;
+    color: #555;
   }
+
+  .header {
+    display: flex;
+    flex-direction: row;
+    /* align-items: center; */
+    align-items: baseline;
+    justify-content: center;
+  }
+
+
+  .logo {
+    width: 23px;
+    padding-right: 7px;
+  }
+
+  h1, h2 {
+    font-family: "Cormorant Garamond", serif;
+    font-weight: 700;
+  }
+
+  h2 {
+    text-align: center;
+  }
+
+  .plots {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 100px;
+  }
+
+  .plot-container {
+    padding: 50px 0px;
+  }
+
 """
 
 
@@ -154,9 +195,9 @@ plotView totalsByMonth =
           [ Svg.tspan [] [ Svg.text <| toString value ] ]
     in
       plot
-        [ size ( 1000, 600 )
-        , padding (50, 100)
-        , plotStyle [ ( "padding", "60px 60px 60px 60px" ), ( "overflow", "hidden" ) ]
+        [ size ( 800, 400 )
+        , padding (0, 20)
+        , plotStyle [ ( "padding", "0px 0px 60px 60px" ), ( "overflow", "hidden" ) ]
         ]
         -- [ Plot.line [ areaStyle [ ( "stroke", "#cfd8ea" ), ( "fill", "#e4eeff" ) ] ] data
         -- [ horizontalGrid [ gridTickList [ 100, 200, 300, 400 ], gridStyle [ ( "stroke", "#e2e2e2" ) ] ]
@@ -190,10 +231,23 @@ view model =
           plotView data
         Nothing ->
           div [] []
+    logo =
+      img [ class "logo", src "elm-logo.svg" ] [ ]
   in
     div []
       [ node "style" [] [ text style ]
-      , h1 [ ] [ text "Elm-alytics" ]
-      , numReposCreatedPerMonthHtml
-      , numCommitsPerMonthHtml
+      , div [ class "header" ]
+        [ logo
+        , h1 [ ] [ text "ElmAlytics" ]
+        ]
+      , div [ class "plots" ]
+        [ div [ class "plot-container" ]
+          [ h2 [] [ text "Number of Elm repos created on Github by month" ]
+          , numReposCreatedPerMonthHtml
+          ]
+        , div [ class "plot-container" ]
+          [ h2 [] [ text "Total number of Git commits to Elm projects by month" ]
+          , numCommitsPerMonthHtml
+          ]
+        ]
       ]
