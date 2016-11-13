@@ -9,22 +9,35 @@ import Array exposing (Array)
 
 
 
-import Html exposing (div, h1, text, p, node, img, h2, h3)
-import Html.Attributes exposing (src, class, class)
+import Html exposing (div, h1, text, p, node, img, h2, h3, a)
+import Html.Attributes exposing (src, class, class, width, height, href)
 
 import Array
-import Decoders exposing (totalsByMonthDecoder)
+import Decoders exposing (..)
 
 import Svg
 import Svg.Attributes
 import Plot exposing (..)
+import Github exposing (avatarUrl, userUrl, repoUrl, githubStarButton)
 
-dataSources : { numReposCreatedPerMonth : String, numCommitsPerMonth : String }
+dataSources :
+  { numReposCreatedPerMonth : String
+  , numCommitsPerMonth : String
+  , mostStarredRepos : String
+  , mostReposCreated : String
+  , mostStarsForRepos : String
+  }
 dataSources =
   { numReposCreatedPerMonth =
     "http://elmalytics-backend.michaelbylstra.com/static/json/formattedNumReposCreatedPerMonth.json"
   , numCommitsPerMonth =
     "http://elmalytics-backend.michaelbylstra.com/static/json/formattedNumCommitsPerMonth.json"
+  , mostStarredRepos =
+    "http://elmalytics-backend.michaelbylstra.com/static/json/mostStarredRepos.json"
+  , mostReposCreated =
+    "http://elmalytics-backend.michaelbylstra.com/static/json/mostReposCreated.json"
+  , mostStarsForRepos =
+    "http://elmalytics-backend.michaelbylstra.com/static/json/mostStarsForRepos.json"
   }
 
 type alias TotalsByMonth =
@@ -33,6 +46,9 @@ type alias TotalsByMonth =
 type alias Model =
   { numReposCreatedPerMonth : Maybe TotalsByMonth
   , numCommitsPerMonth : Maybe TotalsByMonth
+  , mostStarredRepos : Maybe (List (String, String, Int))
+  , mostReposCreated : Maybe (List (String, Int))
+  , mostStarsForRepos : Maybe (List (String, Int))
   }
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -52,6 +68,12 @@ update msg model =
             { model | numCommitsPerMonth = Just data } ! []
           _ ->
             Debug.crash ("no dataSourceName of " ++ dataSourceName)
+    MostStarredReposSucceed _ rows ->
+      { model | mostStarredRepos = Just rows } ! []
+    MostReposCreatedSucceed _ rows ->
+      { model | mostReposCreated = Just rows } ! []
+    MostStarsForReposSucceed _ rows ->
+      { model | mostStarsForRepos = Just rows } ! []
     FetchFail error ->
       Debug.crash (toString error)
 
@@ -68,16 +90,42 @@ init =
         get totalsByMonthDecoder dataSources.numCommitsPerMonth
     numCommitsPerMonthCmd = Task.perform FetchFail (FetchSucceed "numCommitsPerMonth") numCommitsPerMonthTask
 
+    mostStarredReposTask : Task Error (List (String, String, Int))
+    mostStarredReposTask =
+        get mostStarredReposDecoder dataSources.mostStarredRepos
+    mostStarredReposCmd = Task.perform FetchFail (MostStarredReposSucceed "mostStarredRepos") mostStarredReposTask
+
+    mostReposCreatedTask : Task Error (List (String, Int))
+    mostReposCreatedTask =
+        get mostReposCreatedDecoder dataSources.mostReposCreated
+    mostReposCreatedCmd = Task.perform FetchFail (MostReposCreatedSucceed "mostReposCreated") mostReposCreatedTask
+
+    mostStarsForReposTask : Task Error (List (String, Int))
+    mostStarsForReposTask =
+        get mostStarsForReposDecoder dataSources.mostStarsForRepos
+    mostStarsForReposCmd = Task.perform FetchFail (MostStarsForReposSucceed "mostStarsForRepos") mostStarsForReposTask
+
   in
     { numCommitsPerMonth = Nothing
     , numReposCreatedPerMonth = Nothing
+    , mostStarredRepos = Nothing
+    , mostReposCreated = Nothing
+    , mostStarsForRepos = Nothing
     }
     !
-    [ numReposCreatedPerMonthCmd, numCommitsPerMonthCmd ]
+    [ numReposCreatedPerMonthCmd
+    , numCommitsPerMonthCmd
+    , mostStarredReposCmd
+    , mostReposCreatedCmd
+    , mostStarsForReposCmd
+    ]
 
 
 type Msg =
     FetchSucceed String (List (String, String, Int))
+  | MostStarredReposSucceed String (List (String, String, Int))
+  | MostReposCreatedSucceed String (List (String, Int))
+  | MostStarsForReposSucceed String (List (String, Int))
   | FetchFail Http.Error
 
 
@@ -91,9 +139,14 @@ style = """
     margin: 20px;
     text-size: 10px;
     color: #555;
+    padding: 0px;
+  }
+  body > div {
+    padding-bottom: 120px;
   }
 
   .header {
+    margin-top: 32px;
     display: flex;
     flex-direction: row;
     /* align-items: center; */
@@ -103,8 +156,21 @@ style = """
 
 
   .logo {
-    width: 23px;
-    padding-right: 7px;
+    width: 50px;
+    padding-right: 16px;
+  }
+
+  .github-star-button {
+    position: absolute;
+    right: 0px;
+    top: 30px;
+    z-index: 1;
+  }
+
+
+  a {
+    color: #4078c0;
+    text-decoration: none;
   }
 
   h1, h2 {
@@ -112,8 +178,14 @@ style = """
     font-weight: 700;
   }
 
+  h1 {
+    font-size: 65px;
+    margin-bottom: -10px;
+  }
+
   h2 {
     text-align: center;
+    font-size: 35px;
   }
 
   .plots {
@@ -127,6 +199,40 @@ style = """
   .plot-container {
     padding: 50px 0px;
   }
+
+  .avatar-list {
+    margin-top: 70px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .repo {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 30px;
+    margin-right: 20px;
+    width: 200px;
+  }
+
+  .repo > div > div {
+    height: 23px;
+  }
+
+  .avatar {
+    width: 50px;
+    height: 50px;
+    margin-right: 13px;
+    border-radius: 25px;
+  }
+
+  .avatar-list-wide .repo {
+    width: 300px;
+  }
+
+
 
 """
 
@@ -197,12 +303,12 @@ plotView totalsByMonth =
       plot
         [ size ( 800, 400 )
         , padding (0, 20)
-        , plotStyle [ ( "padding", "0px 0px 60px 60px" ), ( "overflow", "hidden" ) ]
+        , plotStyle [ ( "padding", "0px 40px 60px 60px" ), ( "overflow", "hidden" ) ]
         ]
         -- [ Plot.line [ areaStyle [ ( "stroke", "#cfd8ea" ), ( "fill", "#e4eeff" ) ] ] data
         -- [ horizontalGrid [ gridTickList [ 100, 200, 300, 400 ], gridStyle [ ( "stroke", "#e2e2e2" ) ] ]
-        [ verticalGrid [ gridTickList [ 100, 200, 300, 400 ], gridStyle [ ( "stroke", "#e2e2e2" ) ] ]
-        , line [ lineStyle [ ( "stroke", "#b6c9ef" ) ] ] plotData
+        -- [ verticalGrid [ gridTickList [ 100, 200, 300, 400 ], gridStyle [ ( "stroke", "#e2e2e2" ) ] ]
+        [ line [ lineStyle [ ( "stroke", "#b6c9ef" ) ] ] plotData
         , xAxis
             [ axisLineStyle [ ( "stroke", "#7F7F7F" ) ]
             -- , tickList [ 0, 1, 2, 3, 4, 5, 6, 7 ]
@@ -231,14 +337,46 @@ view model =
           plotView data
         Nothing ->
           div [] []
+
+    mostStarredReposHtml =
+      case model.mostStarredRepos of
+        Just data ->
+          mostStarredReposView data
+        Nothing ->
+          div [] []
+
+    mostReposCreatedHtml =
+      case model.mostReposCreated of
+        Just data ->
+          mostReposCreatedView data
+        Nothing ->
+          div [] []
+
+    mostStarsForReposHtml =
+      case model.mostStarsForRepos of
+        Just data ->
+          mostStarsForReposView data
+        Nothing ->
+          div [] []
+
     logo =
       img [ class "logo", src "elm-logo.svg" ] [ ]
   in
     div []
       [ node "style" [] [ text style ]
+      , div [ class "github-star-button" ]
+        [ githubStarButton
+          { user="mbylstra"
+          , repo="elmalytics-frontend"
+          , type'="star"
+          , size="small"
+          , style=[("vertical-align", "middle"), ("margin-top", "-5px")]
+          }
+        ]
+
       , div [ class "header" ]
         [ logo
-        , h1 [ ] [ text "ElmAlytics" ]
+        , h1 [ ] [ text "Elmalytics" ]
         ]
       , div [ class "plots" ]
         [ div [ class "plot-container" ]
@@ -250,4 +388,98 @@ view model =
           , numCommitsPerMonthHtml
           ]
         ]
+        , div [ class "plot-container" ]
+          [ h2 [] [ text "Most starred Elm repos" ]
+          , mostStarredReposHtml
+          ]
+        , div [ class "plot-container" ]
+          [ h2 [] [ text "Most stars gathered for Elm repos" ]
+          , mostStarsForReposHtml
+          ]
+        , div [ class "plot-container" ]
+          [ h2 [] [ text "Most Elm repos created" ]
+          , mostReposCreatedHtml
+          ]
       ]
+
+mostStarredReposView : List (String, String, Int) -> Html.Html Msg
+mostStarredReposView mostStarredRepos =
+  let
+    avatarWidth = 50
+    renderRow : (String, String, Int) -> Html.Html Msg
+    renderRow (repoName, userName, total) =
+      div [ class "repo" ]
+        [ img
+          [ class "avatar"
+          , src <| avatarUrl userName avatarWidth
+          ]
+          []
+        , div [ ]
+          [ div [ ]
+            [ img [ src "github-star.svg" ] []
+            , text " "
+            , text <| toString total
+            ]
+          , div [ ]
+            [ a [ href <| repoUrl userName repoName ] [ text repoName ]
+            , text " by "
+            , a [ href <| userUrl userName ] [ text userName ]
+            ]
+          ]
+        ]
+  in
+    div [ class "avatar-list avatar-list-wide" ]
+      (List.map renderRow mostStarredRepos)
+
+mostReposCreatedView : List (String, Int) -> Html.Html Msg
+mostReposCreatedView mostReposCreated =
+  let
+    avatarWidth = 50
+    renderRow : (String, Int) -> Html.Html Msg
+    renderRow (userName, total) =
+      div [ class "repo" ]
+        [ img
+          [ class "avatar"
+          , src <| avatarUrl userName avatarWidth
+          ]
+          []
+        , div [ ]
+          [ div [ ]
+            [ text <| toString total
+            , text " repos"
+            ]
+          , div [ ]
+            [ a [ href <| userUrl userName ] [ text userName ]
+            ]
+          ]
+        ]
+  in
+    div [ class "avatar-list" ]
+      (List.map renderRow mostReposCreated)
+
+mostStarsForReposView : List (String, Int) -> Html.Html Msg
+mostStarsForReposView mostStarsForRepos =
+  let
+    avatarWidth = 50
+    renderRow : (String, Int) -> Html.Html Msg
+    renderRow (userName, total) =
+      div [ class "repo" ]
+        [ img
+          [ class "avatar"
+          , src <| avatarUrl userName avatarWidth
+          ]
+          []
+        , div [ ]
+          [ div [ ]
+            [ img [ src "github-star.svg" ] []
+            , text " "
+            , text <| toString total
+            ]
+          , div [ ]
+            [ a [ href <| userUrl userName ] [ text userName ]
+            ]
+          ]
+        ]
+  in
+    div [ class "avatar-list" ]
+      (List.map renderRow mostStarsForRepos)
