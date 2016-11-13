@@ -9019,6 +9019,853 @@ var _evancz$elm_http$Http$post = F3(
 			decoder,
 			A2(_evancz$elm_http$Http$send, _evancz$elm_http$Http$defaultSettings, request));
 	});
+var _terezka$elm_plot$Helpers$calculateStep = function (targetStep) {
+	var tempStep = targetStep;
+	var mag = _elm_lang$core$Basics$floor(
+		A2(_elm_lang$core$Basics$logBase, 10, tempStep));
+	var magPow = _elm_lang$core$Basics$toFloat(
+		Math.pow(10, mag));
+	var magMsd = _elm_lang$core$Basics$round(tempStep / magPow);
+	var magMsdFinal = (_elm_lang$core$Native_Utils.cmp(magMsd, 5) > 0) ? 10 : ((_elm_lang$core$Native_Utils.cmp(magMsd, 2) > 0) ? 5 : ((_elm_lang$core$Native_Utils.cmp(magMsd, 1) > 0) ? 1 : magMsd));
+	return _elm_lang$core$Basics$toFloat(magMsdFinal) * magPow;
+};
+var _terezka$elm_plot$Helpers$toStyle = function (styles) {
+	return A3(
+		_elm_lang$core$List$foldr,
+		F2(
+			function (_p0, r) {
+				var _p1 = _p0;
+				return A2(
+					_elm_lang$core$Basics_ops['++'],
+					r,
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						_p1._0,
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							':',
+							A2(_elm_lang$core$Basics_ops['++'], _p1._1, '; '))));
+			}),
+		'',
+		styles);
+};
+var _terezka$elm_plot$Helpers$toRotate = F3(
+	function (d, x, y) {
+		return A2(
+			_elm_lang$core$Basics_ops['++'],
+			'rotate(',
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				_elm_lang$core$Basics$toString(d),
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					' ',
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						_elm_lang$core$Basics$toString(x),
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							' ',
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								_elm_lang$core$Basics$toString(y),
+								')'))))));
+	});
+var _terezka$elm_plot$Helpers$toTranslate = function (_p2) {
+	var _p3 = _p2;
+	return A2(
+		_elm_lang$core$Basics_ops['++'],
+		'translate(',
+		A2(
+			_elm_lang$core$Basics_ops['++'],
+			_elm_lang$core$Basics$toString(_p3._0),
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				',',
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					_elm_lang$core$Basics$toString(_p3._1),
+					')'))));
+};
+var _terezka$elm_plot$Helpers$toPositionAttr = F4(
+	function (x1, y1, x2, y2) {
+		return _elm_lang$core$Native_List.fromArray(
+			[
+				_elm_lang$svg$Svg_Attributes$x1(
+				_elm_lang$core$Basics$toString(x1)),
+				_elm_lang$svg$Svg_Attributes$y1(
+				_elm_lang$core$Basics$toString(y1)),
+				_elm_lang$svg$Svg_Attributes$x2(
+				_elm_lang$core$Basics$toString(x2)),
+				_elm_lang$svg$Svg_Attributes$y2(
+				_elm_lang$core$Basics$toString(y2))
+			]);
+	});
+var _terezka$elm_plot$Helpers$toInstruction = F2(
+	function (instructionType, coords) {
+		var coordsString = A2(
+			_elm_lang$core$String$join,
+			',',
+			A2(_elm_lang$core$List$map, _elm_lang$core$Basics$toString, coords));
+		return A2(
+			_elm_lang$core$Basics_ops['++'],
+			instructionType,
+			A2(_elm_lang$core$Basics_ops['++'], ' ', coordsString));
+	});
+var _terezka$elm_plot$Helpers$startPath = function (data) {
+	var tail = A2(
+		_elm_lang$core$Maybe$withDefault,
+		_elm_lang$core$Native_List.fromArray(
+			[]),
+		_elm_lang$core$List$tail(data));
+	var _p4 = A2(
+		_elm_lang$core$Maybe$withDefault,
+		{ctor: '_Tuple2', _0: 0, _1: 0},
+		_elm_lang$core$List$head(data));
+	var x = _p4._0;
+	var y = _p4._1;
+	return {
+		ctor: '_Tuple2',
+		_0: A2(
+			_terezka$elm_plot$Helpers$toInstruction,
+			'M',
+			_elm_lang$core$Native_List.fromArray(
+				[x, y])),
+		_1: tail
+	};
+};
+var _terezka$elm_plot$Helpers$coordToInstruction = F2(
+	function (instructionType, coords) {
+		return A2(
+			_elm_lang$core$String$join,
+			'',
+			A2(
+				_elm_lang$core$List$map,
+				function (_p5) {
+					var _p6 = _p5;
+					return A2(
+						_terezka$elm_plot$Helpers$toInstruction,
+						instructionType,
+						_elm_lang$core$Native_List.fromArray(
+							[_p6._0, _p6._1]));
+				},
+				coords));
+	});
+var _terezka$elm_plot$Helpers$getLowest = function (values) {
+	return A2(
+		_elm_lang$core$Basics$min,
+		0,
+		A2(
+			_elm_lang$core$Maybe$withDefault,
+			0,
+			_elm_lang$core$List$minimum(values)));
+};
+var _terezka$elm_plot$Helpers$getHighest = function (values) {
+	return A2(
+		_elm_lang$core$Maybe$withDefault,
+		1,
+		_elm_lang$core$List$maximum(values));
+};
+var _terezka$elm_plot$Plot$fromOrientation = F3(
+	function (orientation, x, y) {
+		var _p0 = orientation;
+		if (_p0.ctor === 'X') {
+			return x;
+		} else {
+			return y;
+		}
+	});
+var _terezka$elm_plot$Plot$flipToY = function (_p1) {
+	var _p2 = _p1;
+	return {ctor: '_Tuple2', _0: _p2._1, _1: _p2._0};
+};
+var _terezka$elm_plot$Plot$viewLine = F2(
+	function (toSvgCoords, _p3) {
+		var _p4 = _p3;
+		var svgPoints = A2(_elm_lang$core$List$map, toSvgCoords, _p4.points);
+		var _p5 = _terezka$elm_plot$Helpers$startPath(svgPoints);
+		var startInstruction = _p5._0;
+		var tail = _p5._1;
+		var instructions = A2(_terezka$elm_plot$Helpers$coordToInstruction, 'L', svgPoints);
+		return A2(
+			_elm_lang$svg$Svg$path,
+			_elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$svg$Svg_Attributes$d(
+					A2(_elm_lang$core$Basics_ops['++'], startInstruction, instructions)),
+					_elm_lang$svg$Svg_Attributes$style(
+					_terezka$elm_plot$Helpers$toStyle(_p4.style))
+				]),
+			_elm_lang$core$Native_List.fromArray(
+				[]));
+	});
+var _terezka$elm_plot$Plot$viewArea = F2(
+	function (toSvgCoords, _p6) {
+		var _p7 = _p6;
+		var _p11 = _p7.points;
+		var svgCoords = A2(_elm_lang$core$List$map, toSvgCoords, _p11);
+		var instructions = A2(_terezka$elm_plot$Helpers$coordToInstruction, 'L', svgCoords);
+		var range = A2(_elm_lang$core$List$map, _elm_lang$core$Basics$fst, _p11);
+		var _p8 = {
+			ctor: '_Tuple2',
+			_0: _terezka$elm_plot$Helpers$getLowest(range),
+			_1: _terezka$elm_plot$Helpers$getHighest(range)
+		};
+		var lowestX = _p8._0;
+		var highestX = _p8._1;
+		var _p9 = toSvgCoords(
+			{ctor: '_Tuple2', _0: highestX, _1: 0});
+		var highestSvgX = _p9._0;
+		var originY = _p9._1;
+		var endInstructions = A2(
+			_terezka$elm_plot$Helpers$toInstruction,
+			'L',
+			_elm_lang$core$Native_List.fromArray(
+				[highestSvgX, originY]));
+		var _p10 = toSvgCoords(
+			{ctor: '_Tuple2', _0: lowestX, _1: 0});
+		var lowestSvgX = _p10._0;
+		var startInstruction = A2(
+			_terezka$elm_plot$Helpers$toInstruction,
+			'M',
+			_elm_lang$core$Native_List.fromArray(
+				[lowestSvgX, originY]));
+		return A2(
+			_elm_lang$svg$Svg$path,
+			_elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$svg$Svg_Attributes$d(
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						startInstruction,
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							instructions,
+							A2(_elm_lang$core$Basics_ops['++'], endInstructions, 'Z')))),
+					_elm_lang$svg$Svg_Attributes$style(
+					_terezka$elm_plot$Helpers$toStyle(_p7.style))
+				]),
+			_elm_lang$core$Native_List.fromArray(
+				[]));
+	});
+var _terezka$elm_plot$Plot$viewGridLine = F4(
+	function (toSvgCoords, _p12, styles, tick) {
+		var _p13 = _p12;
+		var _p14 = toSvgCoords(
+			{ctor: '_Tuple2', _0: _p13.highest, _1: tick});
+		var x2 = _p14._0;
+		var y2 = _p14._1;
+		var _p15 = toSvgCoords(
+			{ctor: '_Tuple2', _0: _p13.lowest, _1: tick});
+		var x1 = _p15._0;
+		var y1 = _p15._1;
+		var attrs = A2(
+			_elm_lang$core$List_ops['::'],
+			_elm_lang$svg$Svg_Attributes$style(
+				_terezka$elm_plot$Helpers$toStyle(styles)),
+			A4(_terezka$elm_plot$Helpers$toPositionAttr, x1, y1, x2, y2));
+		return A2(
+			_elm_lang$svg$Svg$line,
+			attrs,
+			_elm_lang$core$Native_List.fromArray(
+				[]));
+	});
+var _terezka$elm_plot$Plot$viewGrid = F3(
+	function (toSvgCoords, calculations, _p16) {
+		var _p17 = _p16;
+		var lines = A2(
+			_elm_lang$core$List$map,
+			A3(_terezka$elm_plot$Plot$viewGridLine, toSvgCoords, calculations, _p17.styles),
+			_p17.ticks);
+		return A2(
+			_elm_lang$svg$Svg$g,
+			_elm_lang$core$Native_List.fromArray(
+				[]),
+			lines);
+	});
+var _terezka$elm_plot$Plot$viewLabel = F3(
+	function (toSvgCoords, viewLabel, tick) {
+		var position = toSvgCoords(
+			{ctor: '_Tuple2', _0: tick, _1: 0});
+		return A2(
+			_elm_lang$svg$Svg$g,
+			_elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$svg$Svg_Attributes$transform(
+					_terezka$elm_plot$Helpers$toTranslate(position))
+				]),
+			_elm_lang$core$Native_List.fromArray(
+				[
+					viewLabel(tick)
+				]));
+	});
+var _terezka$elm_plot$Plot$viewTick = F3(
+	function (toSvgCoords, customViewTick, tick) {
+		var position = toSvgCoords(
+			{ctor: '_Tuple2', _0: tick, _1: 0});
+		return A2(
+			_elm_lang$svg$Svg$g,
+			_elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$svg$Svg_Attributes$transform(
+					_terezka$elm_plot$Helpers$toTranslate(position))
+				]),
+			_elm_lang$core$Native_List.fromArray(
+				[
+					customViewTick(tick)
+				]));
+	});
+var _terezka$elm_plot$Plot$calulateTicks = F2(
+	function (_p18, stepSize) {
+		var _p19 = _p18;
+		var _p20 = _p19.lowest;
+		var lowestTick = _elm_lang$core$Basics$toFloat(
+			_elm_lang$core$Basics$ceiling(_p20 / stepSize)) * stepSize;
+		var steps = _elm_lang$core$Basics$ceiling(
+			(((_p19.span - (_elm_lang$core$Basics$abs(_p20) - _elm_lang$core$Basics$abs(lowestTick))) - stepSize) + 1) / stepSize);
+		var toTick = function (i) {
+			return lowestTick + (_elm_lang$core$Basics$toFloat(i) * stepSize);
+		};
+		return A2(
+			_elm_lang$core$List$map,
+			toTick,
+			_elm_lang$core$Native_List.range(0, steps));
+	});
+var _terezka$elm_plot$Plot$getTicks = F2(
+	function (calculations, tickConfig) {
+		var _p21 = tickConfig;
+		switch (_p21.ctor) {
+			case 'TickAmount':
+				var stepSize = _terezka$elm_plot$Helpers$calculateStep(
+					calculations.span / _elm_lang$core$Basics$toFloat(_p21._0));
+				return A2(_terezka$elm_plot$Plot$calulateTicks, calculations, stepSize);
+			case 'TickStep':
+				return A2(_terezka$elm_plot$Plot$calulateTicks, calculations, _p21._0);
+			default:
+				return _p21._0;
+		}
+	});
+var _terezka$elm_plot$Plot$viewAxis = F3(
+	function (toSvgCoords, calculations, config) {
+		var _p22 = config;
+		var tickConfig = _p22.tickConfig;
+		var customViewTick = _p22.customViewTick;
+		var customViewLabel = _p22.customViewLabel;
+		var axisLineStyle = _p22.axisLineStyle;
+		var ticks = A2(_terezka$elm_plot$Plot$getTicks, calculations, tickConfig);
+		var tickViews = A2(
+			_elm_lang$core$List$map,
+			A2(_terezka$elm_plot$Plot$viewTick, toSvgCoords, customViewTick),
+			ticks);
+		var labelViews = A2(
+			_elm_lang$core$List$map,
+			A2(_terezka$elm_plot$Plot$viewLabel, toSvgCoords, customViewLabel),
+			ticks);
+		return A2(
+			_elm_lang$svg$Svg$g,
+			_elm_lang$core$Native_List.fromArray(
+				[]),
+			_elm_lang$core$Native_List.fromArray(
+				[
+					A4(_terezka$elm_plot$Plot$viewGridLine, toSvgCoords, calculations, axisLineStyle, 0),
+					A2(
+					_elm_lang$svg$Svg$g,
+					_elm_lang$core$Native_List.fromArray(
+						[]),
+					tickViews),
+					A2(
+					_elm_lang$svg$Svg$g,
+					_elm_lang$core$Native_List.fromArray(
+						[]),
+					labelViews)
+				]));
+	});
+var _terezka$elm_plot$Plot$viewFrame = F2(
+	function (_p23, elements) {
+		var _p24 = _p23;
+		var _p25 = _p24.size;
+		var width = _p25._0;
+		var height = _p25._1;
+		return A2(
+			_elm_lang$svg$Svg$svg,
+			_elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$svg$Svg_Attributes$height(
+					_elm_lang$core$Basics$toString(height)),
+					_elm_lang$svg$Svg_Attributes$width(
+					_elm_lang$core$Basics$toString(width)),
+					_elm_lang$svg$Svg_Attributes$style(
+					_terezka$elm_plot$Helpers$toStyle(_p24.style))
+				]),
+			elements);
+	});
+var _terezka$elm_plot$Plot$viewElements = F6(
+	function (xAxis, yAxis, toSvgCoordsX, toSvgCoordsY, element, views) {
+		var _p26 = element;
+		switch (_p26.ctor) {
+			case 'Area':
+				return A2(
+					_elm_lang$core$List_ops['::'],
+					A2(_terezka$elm_plot$Plot$viewArea, toSvgCoordsX, _p26._0),
+					views);
+			case 'Line':
+				return A2(
+					_elm_lang$core$List_ops['::'],
+					A2(_terezka$elm_plot$Plot$viewLine, toSvgCoordsX, _p26._0),
+					views);
+			case 'Grid':
+				var _p28 = _p26._0;
+				var _p27 = A3(
+					_terezka$elm_plot$Plot$fromOrientation,
+					_p28.orientation,
+					{ctor: '_Tuple2', _0: xAxis, _1: toSvgCoordsX},
+					{ctor: '_Tuple2', _0: yAxis, _1: toSvgCoordsY});
+				var calculations = _p27._0;
+				var toSvgCoords = _p27._1;
+				return A2(
+					_elm_lang$core$List_ops['::'],
+					A3(_terezka$elm_plot$Plot$viewGrid, toSvgCoords, calculations, _p28),
+					views);
+			default:
+				var _p30 = _p26._0;
+				var _p29 = A3(
+					_terezka$elm_plot$Plot$fromOrientation,
+					_p30.orientation,
+					{ctor: '_Tuple2', _0: xAxis, _1: toSvgCoordsX},
+					{ctor: '_Tuple2', _0: yAxis, _1: toSvgCoordsY});
+				var calculations = _p29._0;
+				var toSvgCoords = _p29._1;
+				return A2(
+					_elm_lang$core$List_ops['::'],
+					A3(_terezka$elm_plot$Plot$viewAxis, toSvgCoords, calculations, _p30),
+					views);
+		}
+	});
+var _terezka$elm_plot$Plot$collectPoints = F2(
+	function (element, allPoints) {
+		var _p31 = element;
+		switch (_p31.ctor) {
+			case 'Area':
+				return A2(_elm_lang$core$Basics_ops['++'], allPoints, _p31._0.points);
+			case 'Line':
+				return A2(_elm_lang$core$Basics_ops['++'], allPoints, _p31._0.points);
+			default:
+				return allPoints;
+		}
+	});
+var _terezka$elm_plot$Plot$addToSvg = F3(
+	function (orientation, length, calculations) {
+		var _p32 = calculations;
+		var span = _p32.span;
+		var lowest = _p32.lowest;
+		var highest = _p32.highest;
+		var smallestValue = A3(_terezka$elm_plot$Plot$fromOrientation, orientation, lowest, highest);
+		var delta = _elm_lang$core$Basics$toFloat(length) / span;
+		var toSvg = function (v) {
+			return (_elm_lang$core$Basics$abs(smallestValue) * delta) + (delta * v);
+		};
+		return _elm_lang$core$Native_Utils.update(
+			calculations,
+			{toSvg: toSvg});
+	});
+var _terezka$elm_plot$Plot$addEdgeValues = F4(
+	function (length, _p33, values, calculations) {
+		var _p34 = _p33;
+		var highestReal = _terezka$elm_plot$Helpers$getHighest(values);
+		var lowestReal = _terezka$elm_plot$Helpers$getLowest(values);
+		var spanReal = _elm_lang$core$Basics$abs(lowestReal) + _elm_lang$core$Basics$abs(highestReal);
+		var paddingTopRelative = (spanReal * _elm_lang$core$Basics$toFloat(_p34._1)) / _elm_lang$core$Basics$toFloat(length);
+		var highest = highestReal + paddingTopRelative;
+		var paddingBottomRelative = (spanReal * _elm_lang$core$Basics$toFloat(_p34._0)) / _elm_lang$core$Basics$toFloat(length);
+		var span = (spanReal + paddingBottomRelative) + paddingTopRelative;
+		var lowest = lowestReal - A2(_elm_lang$core$Debug$log, 'paddingBottomRelative', paddingBottomRelative);
+		return _elm_lang$core$Native_Utils.update(
+			calculations,
+			{lowest: lowest, highest: highest, span: span});
+	});
+var _terezka$elm_plot$Plot$toLineConfig = F2(
+	function (attr, config) {
+		var _p35 = attr;
+		return _elm_lang$core$Native_Utils.update(
+			config,
+			{style: _p35._0});
+	});
+var _terezka$elm_plot$Plot$defaultLineConfig = {
+	style: _elm_lang$core$Native_List.fromArray(
+		[
+			{ctor: '_Tuple2', _0: 'stroke', _1: '#737373'}
+		]),
+	points: _elm_lang$core$Native_List.fromArray(
+		[])
+};
+var _terezka$elm_plot$Plot$toAreaConfig = F2(
+	function (attr, config) {
+		var _p36 = attr;
+		return _elm_lang$core$Native_Utils.update(
+			config,
+			{style: _p36._0});
+	});
+var _terezka$elm_plot$Plot$defaultAreaConfig = {
+	style: _elm_lang$core$Native_List.fromArray(
+		[
+			{ctor: '_Tuple2', _0: 'stroke', _1: '#737373'},
+			{ctor: '_Tuple2', _0: 'fill', _1: '#ddd'}
+		]),
+	points: _elm_lang$core$Native_List.fromArray(
+		[])
+};
+var _terezka$elm_plot$Plot$toGridConfig = F2(
+	function (attr, config) {
+		var _p37 = attr;
+		if (_p37.ctor === 'GridStyle') {
+			return _elm_lang$core$Native_Utils.update(
+				config,
+				{styles: _p37._0});
+		} else {
+			return _elm_lang$core$Native_Utils.update(
+				config,
+				{ticks: _p37._0});
+		}
+	});
+var _terezka$elm_plot$Plot$toAxisConfig = F2(
+	function (attr, config) {
+		var _p38 = attr;
+		switch (_p38.ctor) {
+			case 'TickConfigAttr':
+				return _elm_lang$core$Native_Utils.update(
+					config,
+					{tickConfig: _p38._0});
+			case 'ViewTick':
+				return _elm_lang$core$Native_Utils.update(
+					config,
+					{customViewTick: _p38._0});
+			case 'ViewLabel':
+				return _elm_lang$core$Native_Utils.update(
+					config,
+					{customViewLabel: _p38._0});
+			default:
+				return _elm_lang$core$Native_Utils.update(
+					config,
+					{axisLineStyle: _p38._0});
+		}
+	});
+var _terezka$elm_plot$Plot$defaultLabelHtml = F2(
+	function (axis, tick) {
+		var displacement = A3(
+			_terezka$elm_plot$Plot$fromOrientation,
+			axis,
+			{ctor: '_Tuple2', _0: 0, _1: 24},
+			{ctor: '_Tuple2', _0: -10, _1: 5});
+		var style = A3(
+			_terezka$elm_plot$Plot$fromOrientation,
+			axis,
+			{ctor: '_Tuple2', _0: 'text-anchor', _1: 'middle'},
+			{ctor: '_Tuple2', _0: 'text-anchor', _1: 'end'});
+		var commonStyle = _elm_lang$core$Native_List.fromArray(
+			[
+				{ctor: '_Tuple2', _0: 'stroke', _1: '#757575'}
+			]);
+		return A2(
+			_elm_lang$svg$Svg$text$,
+			_elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$svg$Svg_Attributes$transform(
+					_terezka$elm_plot$Helpers$toTranslate(displacement)),
+					_elm_lang$svg$Svg_Attributes$style(
+					_terezka$elm_plot$Helpers$toStyle(
+						A2(_elm_lang$core$List_ops['::'], style, commonStyle)))
+				]),
+			_elm_lang$core$Native_List.fromArray(
+				[
+					A2(
+					_elm_lang$svg$Svg$tspan,
+					_elm_lang$core$Native_List.fromArray(
+						[]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$svg$Svg$text(
+							_elm_lang$core$Basics$toString(tick))
+						]))
+				]));
+	});
+var _terezka$elm_plot$Plot$defaultTickHtml = F2(
+	function (axis, tick) {
+		var displacement = A3(
+			_terezka$elm_plot$Plot$fromOrientation,
+			axis,
+			'',
+			A3(_terezka$elm_plot$Helpers$toRotate, 90, 0, 0));
+		return A2(
+			_elm_lang$svg$Svg$line,
+			_elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$svg$Svg_Attributes$style('stroke: #757575;'),
+					_elm_lang$svg$Svg_Attributes$y2('7'),
+					_elm_lang$svg$Svg_Attributes$transform(displacement)
+				]),
+			_elm_lang$core$Native_List.fromArray(
+				[]));
+	});
+var _terezka$elm_plot$Plot$toPlotConfig = F2(
+	function (attr, config) {
+		var _p39 = attr;
+		switch (_p39.ctor) {
+			case 'Size':
+				return _elm_lang$core$Native_Utils.update(
+					config,
+					{size: _p39._0});
+			case 'Dimensions':
+				return _elm_lang$core$Native_Utils.update(
+					config,
+					{dimensions: _p39._0});
+			case 'Padding':
+				return _elm_lang$core$Native_Utils.update(
+					config,
+					{padding: _p39._0});
+			default:
+				return _elm_lang$core$Native_Utils.update(
+					config,
+					{style: _p39._0});
+		}
+	});
+var _terezka$elm_plot$Plot$defaultPlotConfig = {
+	size: {ctor: '_Tuple2', _0: 800, _1: 500},
+	dimensions: _elm_lang$core$Maybe$Nothing,
+	padding: {ctor: '_Tuple2', _0: 10, _1: 10},
+	style: _elm_lang$core$Native_List.fromArray(
+		[
+			{ctor: '_Tuple2', _0: 'padding', _1: '30px'},
+			{ctor: '_Tuple2', _0: 'overflow', _1: 'hidden'}
+		])
+};
+var _terezka$elm_plot$Plot$PlotConfig = F4(
+	function (a, b, c, d) {
+		return {size: a, dimensions: b, padding: c, style: d};
+	});
+var _terezka$elm_plot$Plot$AxisConfig = F5(
+	function (a, b, c, d, e) {
+		return {tickConfig: a, customViewTick: b, customViewLabel: c, axisLineStyle: d, orientation: e};
+	});
+var _terezka$elm_plot$Plot$GridConfig = F3(
+	function (a, b, c) {
+		return {ticks: a, styles: b, orientation: c};
+	});
+var _terezka$elm_plot$Plot$AreaConfig = F2(
+	function (a, b) {
+		return {style: a, points: b};
+	});
+var _terezka$elm_plot$Plot$LineConfig = F2(
+	function (a, b) {
+		return {style: a, points: b};
+	});
+var _terezka$elm_plot$Plot$AxisCalulation = F4(
+	function (a, b, c, d) {
+		return {span: a, lowest: b, highest: c, toSvg: d};
+	});
+var _terezka$elm_plot$Plot$axisCalulationInit = A4(_terezka$elm_plot$Plot$AxisCalulation, 0, 0, 0, _elm_lang$core$Basics$identity);
+var _terezka$elm_plot$Plot$calculateAxis = F4(
+	function (orientation, length, padding, values) {
+		return A3(
+			_terezka$elm_plot$Plot$addToSvg,
+			orientation,
+			length,
+			A4(_terezka$elm_plot$Plot$addEdgeValues, length, padding, values, _terezka$elm_plot$Plot$axisCalulationInit));
+	});
+var _terezka$elm_plot$Plot$Line = function (a) {
+	return {ctor: 'Line', _0: a};
+};
+var _terezka$elm_plot$Plot$line = F2(
+	function (attrs, points) {
+		var config = A3(_elm_lang$core$List$foldr, _terezka$elm_plot$Plot$toLineConfig, _terezka$elm_plot$Plot$defaultLineConfig, attrs);
+		return _terezka$elm_plot$Plot$Line(
+			_elm_lang$core$Native_Utils.update(
+				config,
+				{points: points}));
+	});
+var _terezka$elm_plot$Plot$Area = function (a) {
+	return {ctor: 'Area', _0: a};
+};
+var _terezka$elm_plot$Plot$area = F2(
+	function (attrs, points) {
+		var config = A3(_elm_lang$core$List$foldr, _terezka$elm_plot$Plot$toAreaConfig, _terezka$elm_plot$Plot$defaultAreaConfig, attrs);
+		return _terezka$elm_plot$Plot$Area(
+			_elm_lang$core$Native_Utils.update(
+				config,
+				{points: points}));
+	});
+var _terezka$elm_plot$Plot$Grid = function (a) {
+	return {ctor: 'Grid', _0: a};
+};
+var _terezka$elm_plot$Plot$Axis = function (a) {
+	return {ctor: 'Axis', _0: a};
+};
+var _terezka$elm_plot$Plot$PlotStyle = function (a) {
+	return {ctor: 'PlotStyle', _0: a};
+};
+var _terezka$elm_plot$Plot$plotStyle = _terezka$elm_plot$Plot$PlotStyle;
+var _terezka$elm_plot$Plot$Size = function (a) {
+	return {ctor: 'Size', _0: a};
+};
+var _terezka$elm_plot$Plot$size = _terezka$elm_plot$Plot$Size;
+var _terezka$elm_plot$Plot$Padding = function (a) {
+	return {ctor: 'Padding', _0: a};
+};
+var _terezka$elm_plot$Plot$padding = _terezka$elm_plot$Plot$Padding;
+var _terezka$elm_plot$Plot$Dimensions = function (a) {
+	return {ctor: 'Dimensions', _0: a};
+};
+var _terezka$elm_plot$Plot$dimensions = _terezka$elm_plot$Plot$Dimensions;
+var _terezka$elm_plot$Plot$Y = {ctor: 'Y'};
+var _terezka$elm_plot$Plot$X = {ctor: 'X'};
+var _terezka$elm_plot$Plot$defaultGridConfig = {
+	ticks: _elm_lang$core$Native_List.fromArray(
+		[]),
+	styles: _elm_lang$core$Native_List.fromArray(
+		[
+			{ctor: '_Tuple2', _0: 'stroke', _1: '#757575'}
+		]),
+	orientation: _terezka$elm_plot$Plot$X
+};
+var _terezka$elm_plot$Plot$verticalGrid = function (attrs) {
+	return _terezka$elm_plot$Plot$Grid(
+		A3(_elm_lang$core$List$foldr, _terezka$elm_plot$Plot$toGridConfig, _terezka$elm_plot$Plot$defaultGridConfig, attrs));
+};
+var _terezka$elm_plot$Plot$horizontalGrid = function (attrs) {
+	var defaultGridConfigY = _elm_lang$core$Native_Utils.update(
+		_terezka$elm_plot$Plot$defaultGridConfig,
+		{orientation: _terezka$elm_plot$Plot$Y});
+	return _terezka$elm_plot$Plot$Grid(
+		A3(_elm_lang$core$List$foldr, _terezka$elm_plot$Plot$toGridConfig, defaultGridConfigY, attrs));
+};
+var _terezka$elm_plot$Plot$viewPlot = F2(
+	function (attrs, elements) {
+		var _p40 = _elm_lang$core$List$unzip(
+			A3(
+				_elm_lang$core$List$foldr,
+				_terezka$elm_plot$Plot$collectPoints,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				elements));
+		var xValues = _p40._0;
+		var yValues = _p40._1;
+		var plotConfig = A3(_elm_lang$core$List$foldr, _terezka$elm_plot$Plot$toPlotConfig, _terezka$elm_plot$Plot$defaultPlotConfig, attrs);
+		var _p41 = plotConfig.size;
+		var width = _p41._0;
+		var height = _p41._1;
+		var xAxis = A4(
+			_terezka$elm_plot$Plot$calculateAxis,
+			_terezka$elm_plot$Plot$X,
+			width,
+			{ctor: '_Tuple2', _0: 0, _1: 0},
+			xValues);
+		var yAxis = A4(_terezka$elm_plot$Plot$calculateAxis, _terezka$elm_plot$Plot$Y, height, plotConfig.padding, yValues);
+		var toSvgCoordsX = function (_p42) {
+			var _p43 = _p42;
+			return {
+				ctor: '_Tuple2',
+				_0: xAxis.toSvg(_p43._0),
+				_1: yAxis.toSvg(0 - _p43._1)
+			};
+		};
+		var toSvgCoordsY = function (_p44) {
+			return toSvgCoordsX(
+				_terezka$elm_plot$Plot$flipToY(_p44));
+		};
+		var elementViews = A3(
+			_elm_lang$core$List$foldr,
+			A4(_terezka$elm_plot$Plot$viewElements, xAxis, yAxis, toSvgCoordsX, toSvgCoordsY),
+			_elm_lang$core$Native_List.fromArray(
+				[]),
+			elements);
+		return A2(_terezka$elm_plot$Plot$viewFrame, plotConfig, elementViews);
+	});
+var _terezka$elm_plot$Plot$plot = F2(
+	function (attrs, elements) {
+		return A3(_elm_lang$svg$Svg_Lazy$lazy2, _terezka$elm_plot$Plot$viewPlot, attrs, elements);
+	});
+var _terezka$elm_plot$Plot$TickList = function (a) {
+	return {ctor: 'TickList', _0: a};
+};
+var _terezka$elm_plot$Plot$TickAmount = function (a) {
+	return {ctor: 'TickAmount', _0: a};
+};
+var _terezka$elm_plot$Plot$defaultAxisConfig = {
+	tickConfig: _terezka$elm_plot$Plot$TickAmount(10),
+	customViewTick: _terezka$elm_plot$Plot$defaultTickHtml(_terezka$elm_plot$Plot$X),
+	customViewLabel: _terezka$elm_plot$Plot$defaultLabelHtml(_terezka$elm_plot$Plot$X),
+	axisLineStyle: _elm_lang$core$Native_List.fromArray(
+		[
+			{ctor: '_Tuple2', _0: 'stroke', _1: '#757575'}
+		]),
+	orientation: _terezka$elm_plot$Plot$X
+};
+var _terezka$elm_plot$Plot$xAxis = function (attrs) {
+	return _terezka$elm_plot$Plot$Axis(
+		A3(_elm_lang$core$List$foldr, _terezka$elm_plot$Plot$toAxisConfig, _terezka$elm_plot$Plot$defaultAxisConfig, attrs));
+};
+var _terezka$elm_plot$Plot$yAxis = function (attrs) {
+	var defaultAxisConfigY = _elm_lang$core$Native_Utils.update(
+		_terezka$elm_plot$Plot$defaultAxisConfig,
+		{
+			orientation: _terezka$elm_plot$Plot$Y,
+			customViewLabel: _terezka$elm_plot$Plot$defaultLabelHtml(_terezka$elm_plot$Plot$Y),
+			customViewTick: _terezka$elm_plot$Plot$defaultTickHtml(_terezka$elm_plot$Plot$Y)
+		});
+	return _terezka$elm_plot$Plot$Axis(
+		A3(_elm_lang$core$List$foldr, _terezka$elm_plot$Plot$toAxisConfig, defaultAxisConfigY, attrs));
+};
+var _terezka$elm_plot$Plot$TickStep = function (a) {
+	return {ctor: 'TickStep', _0: a};
+};
+var _terezka$elm_plot$Plot$AxisLineStyle = function (a) {
+	return {ctor: 'AxisLineStyle', _0: a};
+};
+var _terezka$elm_plot$Plot$axisLineStyle = _terezka$elm_plot$Plot$AxisLineStyle;
+var _terezka$elm_plot$Plot$ViewLabel = function (a) {
+	return {ctor: 'ViewLabel', _0: a};
+};
+var _terezka$elm_plot$Plot$customViewLabel = _terezka$elm_plot$Plot$ViewLabel;
+var _terezka$elm_plot$Plot$ViewTick = function (a) {
+	return {ctor: 'ViewTick', _0: a};
+};
+var _terezka$elm_plot$Plot$customViewTick = _terezka$elm_plot$Plot$ViewTick;
+var _terezka$elm_plot$Plot$TickConfigAttr = function (a) {
+	return {ctor: 'TickConfigAttr', _0: a};
+};
+var _terezka$elm_plot$Plot$amountOfTicks = function (amount) {
+	return _terezka$elm_plot$Plot$TickConfigAttr(
+		_terezka$elm_plot$Plot$TickAmount(amount));
+};
+var _terezka$elm_plot$Plot$stepSize = function (stepSize) {
+	return _terezka$elm_plot$Plot$TickConfigAttr(
+		_terezka$elm_plot$Plot$TickStep(stepSize));
+};
+var _terezka$elm_plot$Plot$tickList = function (ticks) {
+	return _terezka$elm_plot$Plot$TickConfigAttr(
+		_terezka$elm_plot$Plot$TickList(ticks));
+};
+var _terezka$elm_plot$Plot$GridTicks = function (a) {
+	return {ctor: 'GridTicks', _0: a};
+};
+var _terezka$elm_plot$Plot$gridTickList = _terezka$elm_plot$Plot$GridTicks;
+var _terezka$elm_plot$Plot$GridStyle = function (a) {
+	return {ctor: 'GridStyle', _0: a};
+};
+var _terezka$elm_plot$Plot$gridStyle = _terezka$elm_plot$Plot$GridStyle;
+var _terezka$elm_plot$Plot$AreaStyle = function (a) {
+	return {ctor: 'AreaStyle', _0: a};
+};
+var _terezka$elm_plot$Plot$areaStyle = _terezka$elm_plot$Plot$AreaStyle;
+var _terezka$elm_plot$Plot$LineStyle = function (a) {
+	return {ctor: 'LineStyle', _0: a};
+};
+var _terezka$elm_plot$Plot$lineStyle = function (style) {
+	return _terezka$elm_plot$Plot$LineStyle(
+		A2(
+			_elm_lang$core$List_ops['::'],
+			{ctor: '_Tuple2', _0: 'fill', _1: 'transparent'},
+			style));
+};
 var _user$project$Decoders$mostStarsForReposDecoder = _elm_lang$core$Json_Decode$list(
 	A3(
 		_elm_lang$core$Json_Decode$tuple2,
@@ -9057,853 +9904,6 @@ var _user$project$Decoders$totalsByMonthDecoder = _elm_lang$core$Json_Decode$lis
 		_elm_lang$core$Json_Decode$string,
 		_elm_lang$core$Json_Decode$string,
 		_elm_lang$core$Json_Decode$int));
-var _user$project$Helpers$calculateStep = function (targetStep) {
-	var tempStep = targetStep;
-	var mag = _elm_lang$core$Basics$floor(
-		A2(_elm_lang$core$Basics$logBase, 10, tempStep));
-	var magPow = _elm_lang$core$Basics$toFloat(
-		Math.pow(10, mag));
-	var magMsd = _elm_lang$core$Basics$round(tempStep / magPow);
-	var magMsdFinal = (_elm_lang$core$Native_Utils.cmp(magMsd, 5) > 0) ? 10 : ((_elm_lang$core$Native_Utils.cmp(magMsd, 2) > 0) ? 5 : ((_elm_lang$core$Native_Utils.cmp(magMsd, 1) > 0) ? 1 : magMsd));
-	return _elm_lang$core$Basics$toFloat(magMsdFinal) * magPow;
-};
-var _user$project$Helpers$toStyle = function (styles) {
-	return A3(
-		_elm_lang$core$List$foldr,
-		F2(
-			function (_p0, r) {
-				var _p1 = _p0;
-				return A2(
-					_elm_lang$core$Basics_ops['++'],
-					r,
-					A2(
-						_elm_lang$core$Basics_ops['++'],
-						_p1._0,
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							':',
-							A2(_elm_lang$core$Basics_ops['++'], _p1._1, '; '))));
-			}),
-		'',
-		styles);
-};
-var _user$project$Helpers$toRotate = F3(
-	function (d, x, y) {
-		return A2(
-			_elm_lang$core$Basics_ops['++'],
-			'rotate(',
-			A2(
-				_elm_lang$core$Basics_ops['++'],
-				_elm_lang$core$Basics$toString(d),
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					' ',
-					A2(
-						_elm_lang$core$Basics_ops['++'],
-						_elm_lang$core$Basics$toString(x),
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							' ',
-							A2(
-								_elm_lang$core$Basics_ops['++'],
-								_elm_lang$core$Basics$toString(y),
-								')'))))));
-	});
-var _user$project$Helpers$toTranslate = function (_p2) {
-	var _p3 = _p2;
-	return A2(
-		_elm_lang$core$Basics_ops['++'],
-		'translate(',
-		A2(
-			_elm_lang$core$Basics_ops['++'],
-			_elm_lang$core$Basics$toString(_p3._0),
-			A2(
-				_elm_lang$core$Basics_ops['++'],
-				',',
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					_elm_lang$core$Basics$toString(_p3._1),
-					')'))));
-};
-var _user$project$Helpers$toPositionAttr = F4(
-	function (x1, y1, x2, y2) {
-		return _elm_lang$core$Native_List.fromArray(
-			[
-				_elm_lang$svg$Svg_Attributes$x1(
-				_elm_lang$core$Basics$toString(x1)),
-				_elm_lang$svg$Svg_Attributes$y1(
-				_elm_lang$core$Basics$toString(y1)),
-				_elm_lang$svg$Svg_Attributes$x2(
-				_elm_lang$core$Basics$toString(x2)),
-				_elm_lang$svg$Svg_Attributes$y2(
-				_elm_lang$core$Basics$toString(y2))
-			]);
-	});
-var _user$project$Helpers$toInstruction = F2(
-	function (instructionType, coords) {
-		var coordsString = A2(
-			_elm_lang$core$String$join,
-			',',
-			A2(_elm_lang$core$List$map, _elm_lang$core$Basics$toString, coords));
-		return A2(
-			_elm_lang$core$Basics_ops['++'],
-			instructionType,
-			A2(_elm_lang$core$Basics_ops['++'], ' ', coordsString));
-	});
-var _user$project$Helpers$startPath = function (data) {
-	var tail = A2(
-		_elm_lang$core$Maybe$withDefault,
-		_elm_lang$core$Native_List.fromArray(
-			[]),
-		_elm_lang$core$List$tail(data));
-	var _p4 = A2(
-		_elm_lang$core$Maybe$withDefault,
-		{ctor: '_Tuple2', _0: 0, _1: 0},
-		_elm_lang$core$List$head(data));
-	var x = _p4._0;
-	var y = _p4._1;
-	return {
-		ctor: '_Tuple2',
-		_0: A2(
-			_user$project$Helpers$toInstruction,
-			'M',
-			_elm_lang$core$Native_List.fromArray(
-				[x, y])),
-		_1: tail
-	};
-};
-var _user$project$Helpers$coordToInstruction = F2(
-	function (instructionType, coords) {
-		return A2(
-			_elm_lang$core$String$join,
-			'',
-			A2(
-				_elm_lang$core$List$map,
-				function (_p5) {
-					var _p6 = _p5;
-					return A2(
-						_user$project$Helpers$toInstruction,
-						instructionType,
-						_elm_lang$core$Native_List.fromArray(
-							[_p6._0, _p6._1]));
-				},
-				coords));
-	});
-var _user$project$Helpers$getLowest = function (values) {
-	return A2(
-		_elm_lang$core$Basics$min,
-		0,
-		A2(
-			_elm_lang$core$Maybe$withDefault,
-			0,
-			_elm_lang$core$List$minimum(values)));
-};
-var _user$project$Helpers$getHighest = function (values) {
-	return A2(
-		_elm_lang$core$Maybe$withDefault,
-		1,
-		_elm_lang$core$List$maximum(values));
-};
-var _user$project$Plot$fromOrientation = F3(
-	function (orientation, x, y) {
-		var _p0 = orientation;
-		if (_p0.ctor === 'X') {
-			return x;
-		} else {
-			return y;
-		}
-	});
-var _user$project$Plot$flipToY = function (_p1) {
-	var _p2 = _p1;
-	return {ctor: '_Tuple2', _0: _p2._1, _1: _p2._0};
-};
-var _user$project$Plot$viewLine = F2(
-	function (toSvgCoords, _p3) {
-		var _p4 = _p3;
-		var svgPoints = A2(_elm_lang$core$List$map, toSvgCoords, _p4.points);
-		var _p5 = _user$project$Helpers$startPath(svgPoints);
-		var startInstruction = _p5._0;
-		var tail = _p5._1;
-		var instructions = A2(_user$project$Helpers$coordToInstruction, 'L', svgPoints);
-		return A2(
-			_elm_lang$svg$Svg$path,
-			_elm_lang$core$Native_List.fromArray(
-				[
-					_elm_lang$svg$Svg_Attributes$d(
-					A2(_elm_lang$core$Basics_ops['++'], startInstruction, instructions)),
-					_elm_lang$svg$Svg_Attributes$style(
-					_user$project$Helpers$toStyle(_p4.style))
-				]),
-			_elm_lang$core$Native_List.fromArray(
-				[]));
-	});
-var _user$project$Plot$viewArea = F2(
-	function (toSvgCoords, _p6) {
-		var _p7 = _p6;
-		var _p11 = _p7.points;
-		var svgCoords = A2(_elm_lang$core$List$map, toSvgCoords, _p11);
-		var instructions = A2(_user$project$Helpers$coordToInstruction, 'L', svgCoords);
-		var range = A2(_elm_lang$core$List$map, _elm_lang$core$Basics$fst, _p11);
-		var _p8 = {
-			ctor: '_Tuple2',
-			_0: _user$project$Helpers$getLowest(range),
-			_1: _user$project$Helpers$getHighest(range)
-		};
-		var lowestX = _p8._0;
-		var highestX = _p8._1;
-		var _p9 = toSvgCoords(
-			{ctor: '_Tuple2', _0: highestX, _1: 0});
-		var highestSvgX = _p9._0;
-		var originY = _p9._1;
-		var endInstructions = A2(
-			_user$project$Helpers$toInstruction,
-			'L',
-			_elm_lang$core$Native_List.fromArray(
-				[highestSvgX, originY]));
-		var _p10 = toSvgCoords(
-			{ctor: '_Tuple2', _0: lowestX, _1: 0});
-		var lowestSvgX = _p10._0;
-		var startInstruction = A2(
-			_user$project$Helpers$toInstruction,
-			'M',
-			_elm_lang$core$Native_List.fromArray(
-				[lowestSvgX, originY]));
-		return A2(
-			_elm_lang$svg$Svg$path,
-			_elm_lang$core$Native_List.fromArray(
-				[
-					_elm_lang$svg$Svg_Attributes$d(
-					A2(
-						_elm_lang$core$Basics_ops['++'],
-						startInstruction,
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							instructions,
-							A2(_elm_lang$core$Basics_ops['++'], endInstructions, 'Z')))),
-					_elm_lang$svg$Svg_Attributes$style(
-					_user$project$Helpers$toStyle(_p7.style))
-				]),
-			_elm_lang$core$Native_List.fromArray(
-				[]));
-	});
-var _user$project$Plot$viewGridLine = F4(
-	function (toSvgCoords, _p12, styles, tick) {
-		var _p13 = _p12;
-		var _p14 = toSvgCoords(
-			{ctor: '_Tuple2', _0: _p13.highest, _1: tick});
-		var x2 = _p14._0;
-		var y2 = _p14._1;
-		var _p15 = toSvgCoords(
-			{ctor: '_Tuple2', _0: _p13.lowest, _1: tick});
-		var x1 = _p15._0;
-		var y1 = _p15._1;
-		var attrs = A2(
-			_elm_lang$core$List_ops['::'],
-			_elm_lang$svg$Svg_Attributes$style(
-				_user$project$Helpers$toStyle(styles)),
-			A4(_user$project$Helpers$toPositionAttr, x1, y1, x2, y2));
-		return A2(
-			_elm_lang$svg$Svg$line,
-			attrs,
-			_elm_lang$core$Native_List.fromArray(
-				[]));
-	});
-var _user$project$Plot$viewGrid = F3(
-	function (toSvgCoords, calculations, _p16) {
-		var _p17 = _p16;
-		var lines = A2(
-			_elm_lang$core$List$map,
-			A3(_user$project$Plot$viewGridLine, toSvgCoords, calculations, _p17.styles),
-			_p17.ticks);
-		return A2(
-			_elm_lang$svg$Svg$g,
-			_elm_lang$core$Native_List.fromArray(
-				[]),
-			lines);
-	});
-var _user$project$Plot$viewLabel = F3(
-	function (toSvgCoords, viewLabel, tick) {
-		var position = toSvgCoords(
-			{ctor: '_Tuple2', _0: tick, _1: 0});
-		return A2(
-			_elm_lang$svg$Svg$g,
-			_elm_lang$core$Native_List.fromArray(
-				[
-					_elm_lang$svg$Svg_Attributes$transform(
-					_user$project$Helpers$toTranslate(position))
-				]),
-			_elm_lang$core$Native_List.fromArray(
-				[
-					viewLabel(tick)
-				]));
-	});
-var _user$project$Plot$viewTick = F3(
-	function (toSvgCoords, customViewTick, tick) {
-		var position = toSvgCoords(
-			{ctor: '_Tuple2', _0: tick, _1: 0});
-		return A2(
-			_elm_lang$svg$Svg$g,
-			_elm_lang$core$Native_List.fromArray(
-				[
-					_elm_lang$svg$Svg_Attributes$transform(
-					_user$project$Helpers$toTranslate(position))
-				]),
-			_elm_lang$core$Native_List.fromArray(
-				[
-					customViewTick(tick)
-				]));
-	});
-var _user$project$Plot$calulateTicks = F2(
-	function (_p18, stepSize) {
-		var _p19 = _p18;
-		var _p20 = _p19.lowest;
-		var lowestTick = _elm_lang$core$Basics$toFloat(
-			_elm_lang$core$Basics$ceiling(_p20 / stepSize)) * stepSize;
-		var steps = _elm_lang$core$Basics$ceiling(
-			(((_p19.span - (_elm_lang$core$Basics$abs(_p20) - _elm_lang$core$Basics$abs(lowestTick))) - stepSize) + 1) / stepSize);
-		var toTick = function (i) {
-			return lowestTick + (_elm_lang$core$Basics$toFloat(i) * stepSize);
-		};
-		return A2(
-			_elm_lang$core$List$map,
-			toTick,
-			_elm_lang$core$Native_List.range(0, steps));
-	});
-var _user$project$Plot$getTicks = F2(
-	function (calculations, tickConfig) {
-		var _p21 = tickConfig;
-		switch (_p21.ctor) {
-			case 'TickAmount':
-				var stepSize = _user$project$Helpers$calculateStep(
-					calculations.span / _elm_lang$core$Basics$toFloat(_p21._0));
-				return A2(_user$project$Plot$calulateTicks, calculations, stepSize);
-			case 'TickStep':
-				return A2(_user$project$Plot$calulateTicks, calculations, _p21._0);
-			default:
-				return _p21._0;
-		}
-	});
-var _user$project$Plot$viewAxis = F3(
-	function (toSvgCoords, calculations, config) {
-		var _p22 = config;
-		var tickConfig = _p22.tickConfig;
-		var customViewTick = _p22.customViewTick;
-		var customViewLabel = _p22.customViewLabel;
-		var axisLineStyle = _p22.axisLineStyle;
-		var ticks = A2(_user$project$Plot$getTicks, calculations, tickConfig);
-		var tickViews = A2(
-			_elm_lang$core$List$map,
-			A2(_user$project$Plot$viewTick, toSvgCoords, customViewTick),
-			ticks);
-		var labelViews = A2(
-			_elm_lang$core$List$map,
-			A2(_user$project$Plot$viewLabel, toSvgCoords, customViewLabel),
-			ticks);
-		return A2(
-			_elm_lang$svg$Svg$g,
-			_elm_lang$core$Native_List.fromArray(
-				[]),
-			_elm_lang$core$Native_List.fromArray(
-				[
-					A4(_user$project$Plot$viewGridLine, toSvgCoords, calculations, axisLineStyle, 0),
-					A2(
-					_elm_lang$svg$Svg$g,
-					_elm_lang$core$Native_List.fromArray(
-						[]),
-					tickViews),
-					A2(
-					_elm_lang$svg$Svg$g,
-					_elm_lang$core$Native_List.fromArray(
-						[]),
-					labelViews)
-				]));
-	});
-var _user$project$Plot$viewFrame = F2(
-	function (_p23, elements) {
-		var _p24 = _p23;
-		var _p25 = _p24.size;
-		var width = _p25._0;
-		var height = _p25._1;
-		return A2(
-			_elm_lang$svg$Svg$svg,
-			_elm_lang$core$Native_List.fromArray(
-				[
-					_elm_lang$svg$Svg_Attributes$height(
-					_elm_lang$core$Basics$toString(height)),
-					_elm_lang$svg$Svg_Attributes$width(
-					_elm_lang$core$Basics$toString(width)),
-					_elm_lang$svg$Svg_Attributes$style(
-					_user$project$Helpers$toStyle(_p24.style))
-				]),
-			elements);
-	});
-var _user$project$Plot$viewElements = F6(
-	function (xAxis, yAxis, toSvgCoordsX, toSvgCoordsY, element, views) {
-		var _p26 = element;
-		switch (_p26.ctor) {
-			case 'Area':
-				return A2(
-					_elm_lang$core$List_ops['::'],
-					A2(_user$project$Plot$viewArea, toSvgCoordsX, _p26._0),
-					views);
-			case 'Line':
-				return A2(
-					_elm_lang$core$List_ops['::'],
-					A2(_user$project$Plot$viewLine, toSvgCoordsX, _p26._0),
-					views);
-			case 'Grid':
-				var _p28 = _p26._0;
-				var _p27 = A3(
-					_user$project$Plot$fromOrientation,
-					_p28.orientation,
-					{ctor: '_Tuple2', _0: xAxis, _1: toSvgCoordsX},
-					{ctor: '_Tuple2', _0: yAxis, _1: toSvgCoordsY});
-				var calculations = _p27._0;
-				var toSvgCoords = _p27._1;
-				return A2(
-					_elm_lang$core$List_ops['::'],
-					A3(_user$project$Plot$viewGrid, toSvgCoords, calculations, _p28),
-					views);
-			default:
-				var _p30 = _p26._0;
-				var _p29 = A3(
-					_user$project$Plot$fromOrientation,
-					_p30.orientation,
-					{ctor: '_Tuple2', _0: xAxis, _1: toSvgCoordsX},
-					{ctor: '_Tuple2', _0: yAxis, _1: toSvgCoordsY});
-				var calculations = _p29._0;
-				var toSvgCoords = _p29._1;
-				return A2(
-					_elm_lang$core$List_ops['::'],
-					A3(_user$project$Plot$viewAxis, toSvgCoords, calculations, _p30),
-					views);
-		}
-	});
-var _user$project$Plot$collectPoints = F2(
-	function (element, allPoints) {
-		var _p31 = element;
-		switch (_p31.ctor) {
-			case 'Area':
-				return A2(_elm_lang$core$Basics_ops['++'], allPoints, _p31._0.points);
-			case 'Line':
-				return A2(_elm_lang$core$Basics_ops['++'], allPoints, _p31._0.points);
-			default:
-				return allPoints;
-		}
-	});
-var _user$project$Plot$addToSvg = F3(
-	function (orientation, length, calculations) {
-		var _p32 = calculations;
-		var span = _p32.span;
-		var lowest = _p32.lowest;
-		var highest = _p32.highest;
-		var smallestValue = A3(_user$project$Plot$fromOrientation, orientation, lowest, highest);
-		var delta = _elm_lang$core$Basics$toFloat(length) / span;
-		var toSvg = function (v) {
-			return (_elm_lang$core$Basics$abs(smallestValue) * delta) + (delta * v);
-		};
-		return _elm_lang$core$Native_Utils.update(
-			calculations,
-			{toSvg: toSvg});
-	});
-var _user$project$Plot$addEdgeValues = F4(
-	function (length, _p33, values, calculations) {
-		var _p34 = _p33;
-		var highestReal = _user$project$Helpers$getHighest(values);
-		var lowestReal = _user$project$Helpers$getLowest(values);
-		var spanReal = _elm_lang$core$Basics$abs(lowestReal) + _elm_lang$core$Basics$abs(highestReal);
-		var paddingTopRelative = (spanReal * _elm_lang$core$Basics$toFloat(_p34._1)) / _elm_lang$core$Basics$toFloat(length);
-		var highest = highestReal + paddingTopRelative;
-		var paddingBottomRelative = (spanReal * _elm_lang$core$Basics$toFloat(_p34._0)) / _elm_lang$core$Basics$toFloat(length);
-		var span = (spanReal + paddingBottomRelative) + paddingTopRelative;
-		var lowest = _elm_lang$core$Native_Utils.eq(lowestReal, 0.0) ? lowestReal : (lowestReal - paddingBottomRelative);
-		return _elm_lang$core$Native_Utils.update(
-			calculations,
-			{lowest: lowest, highest: highest, span: span});
-	});
-var _user$project$Plot$toLineConfig = F2(
-	function (attr, config) {
-		var _p35 = attr;
-		return _elm_lang$core$Native_Utils.update(
-			config,
-			{style: _p35._0});
-	});
-var _user$project$Plot$defaultLineConfig = {
-	style: _elm_lang$core$Native_List.fromArray(
-		[
-			{ctor: '_Tuple2', _0: 'stroke', _1: '#737373'}
-		]),
-	points: _elm_lang$core$Native_List.fromArray(
-		[])
-};
-var _user$project$Plot$toAreaConfig = F2(
-	function (attr, config) {
-		var _p36 = attr;
-		return _elm_lang$core$Native_Utils.update(
-			config,
-			{style: _p36._0});
-	});
-var _user$project$Plot$defaultAreaConfig = {
-	style: _elm_lang$core$Native_List.fromArray(
-		[
-			{ctor: '_Tuple2', _0: 'stroke', _1: '#737373'},
-			{ctor: '_Tuple2', _0: 'fill', _1: '#ddd'}
-		]),
-	points: _elm_lang$core$Native_List.fromArray(
-		[])
-};
-var _user$project$Plot$toGridConfig = F2(
-	function (attr, config) {
-		var _p37 = attr;
-		if (_p37.ctor === 'GridStyle') {
-			return _elm_lang$core$Native_Utils.update(
-				config,
-				{styles: _p37._0});
-		} else {
-			return _elm_lang$core$Native_Utils.update(
-				config,
-				{ticks: _p37._0});
-		}
-	});
-var _user$project$Plot$toAxisConfig = F2(
-	function (attr, config) {
-		var _p38 = attr;
-		switch (_p38.ctor) {
-			case 'TickConfigAttr':
-				return _elm_lang$core$Native_Utils.update(
-					config,
-					{tickConfig: _p38._0});
-			case 'ViewTick':
-				return _elm_lang$core$Native_Utils.update(
-					config,
-					{customViewTick: _p38._0});
-			case 'ViewLabel':
-				return _elm_lang$core$Native_Utils.update(
-					config,
-					{customViewLabel: _p38._0});
-			default:
-				return _elm_lang$core$Native_Utils.update(
-					config,
-					{axisLineStyle: _p38._0});
-		}
-	});
-var _user$project$Plot$defaultLabelHtml = F2(
-	function (axis, tick) {
-		var displacement = A3(
-			_user$project$Plot$fromOrientation,
-			axis,
-			{ctor: '_Tuple2', _0: 0, _1: 24},
-			{ctor: '_Tuple2', _0: -10, _1: 5});
-		var style = A3(
-			_user$project$Plot$fromOrientation,
-			axis,
-			{ctor: '_Tuple2', _0: 'text-anchor', _1: 'middle'},
-			{ctor: '_Tuple2', _0: 'text-anchor', _1: 'end'});
-		var commonStyle = _elm_lang$core$Native_List.fromArray(
-			[
-				{ctor: '_Tuple2', _0: 'stroke', _1: '#757575'}
-			]);
-		return A2(
-			_elm_lang$svg$Svg$text$,
-			_elm_lang$core$Native_List.fromArray(
-				[
-					_elm_lang$svg$Svg_Attributes$transform(
-					_user$project$Helpers$toTranslate(displacement)),
-					_elm_lang$svg$Svg_Attributes$style(
-					_user$project$Helpers$toStyle(
-						A2(_elm_lang$core$List_ops['::'], style, commonStyle)))
-				]),
-			_elm_lang$core$Native_List.fromArray(
-				[
-					A2(
-					_elm_lang$svg$Svg$tspan,
-					_elm_lang$core$Native_List.fromArray(
-						[]),
-					_elm_lang$core$Native_List.fromArray(
-						[
-							_elm_lang$svg$Svg$text(
-							_elm_lang$core$Basics$toString(tick))
-						]))
-				]));
-	});
-var _user$project$Plot$defaultTickHtml = F2(
-	function (axis, tick) {
-		var displacement = A3(
-			_user$project$Plot$fromOrientation,
-			axis,
-			'',
-			A3(_user$project$Helpers$toRotate, 90, 0, 0));
-		return A2(
-			_elm_lang$svg$Svg$line,
-			_elm_lang$core$Native_List.fromArray(
-				[
-					_elm_lang$svg$Svg_Attributes$style('stroke: #757575;'),
-					_elm_lang$svg$Svg_Attributes$y2('7'),
-					_elm_lang$svg$Svg_Attributes$transform(displacement)
-				]),
-			_elm_lang$core$Native_List.fromArray(
-				[]));
-	});
-var _user$project$Plot$toPlotConfig = F2(
-	function (attr, config) {
-		var _p39 = attr;
-		switch (_p39.ctor) {
-			case 'Size':
-				return _elm_lang$core$Native_Utils.update(
-					config,
-					{size: _p39._0});
-			case 'Dimensions':
-				return _elm_lang$core$Native_Utils.update(
-					config,
-					{dimensions: _p39._0});
-			case 'Padding':
-				return _elm_lang$core$Native_Utils.update(
-					config,
-					{padding: _p39._0});
-			default:
-				return _elm_lang$core$Native_Utils.update(
-					config,
-					{style: _p39._0});
-		}
-	});
-var _user$project$Plot$defaultPlotConfig = {
-	size: {ctor: '_Tuple2', _0: 800, _1: 500},
-	dimensions: _elm_lang$core$Maybe$Nothing,
-	padding: {ctor: '_Tuple2', _0: 10, _1: 10},
-	style: _elm_lang$core$Native_List.fromArray(
-		[
-			{ctor: '_Tuple2', _0: 'padding', _1: '30px'},
-			{ctor: '_Tuple2', _0: 'overflow', _1: 'hidden'}
-		])
-};
-var _user$project$Plot$PlotConfig = F4(
-	function (a, b, c, d) {
-		return {size: a, dimensions: b, padding: c, style: d};
-	});
-var _user$project$Plot$AxisConfig = F5(
-	function (a, b, c, d, e) {
-		return {tickConfig: a, customViewTick: b, customViewLabel: c, axisLineStyle: d, orientation: e};
-	});
-var _user$project$Plot$GridConfig = F3(
-	function (a, b, c) {
-		return {ticks: a, styles: b, orientation: c};
-	});
-var _user$project$Plot$AreaConfig = F2(
-	function (a, b) {
-		return {style: a, points: b};
-	});
-var _user$project$Plot$LineConfig = F2(
-	function (a, b) {
-		return {style: a, points: b};
-	});
-var _user$project$Plot$AxisCalculation = F4(
-	function (a, b, c, d) {
-		return {span: a, lowest: b, highest: c, toSvg: d};
-	});
-var _user$project$Plot$axisCalculationInit = A4(_user$project$Plot$AxisCalculation, 0, 0, 0, _elm_lang$core$Basics$identity);
-var _user$project$Plot$calculateAxis = F4(
-	function (orientation, length, padding, values) {
-		return A3(
-			_user$project$Plot$addToSvg,
-			orientation,
-			length,
-			A4(_user$project$Plot$addEdgeValues, length, padding, values, _user$project$Plot$axisCalculationInit));
-	});
-var _user$project$Plot$Line = function (a) {
-	return {ctor: 'Line', _0: a};
-};
-var _user$project$Plot$line = F2(
-	function (attrs, points) {
-		var config = A3(_elm_lang$core$List$foldr, _user$project$Plot$toLineConfig, _user$project$Plot$defaultLineConfig, attrs);
-		return _user$project$Plot$Line(
-			_elm_lang$core$Native_Utils.update(
-				config,
-				{points: points}));
-	});
-var _user$project$Plot$Area = function (a) {
-	return {ctor: 'Area', _0: a};
-};
-var _user$project$Plot$area = F2(
-	function (attrs, points) {
-		var config = A3(_elm_lang$core$List$foldr, _user$project$Plot$toAreaConfig, _user$project$Plot$defaultAreaConfig, attrs);
-		return _user$project$Plot$Area(
-			_elm_lang$core$Native_Utils.update(
-				config,
-				{points: points}));
-	});
-var _user$project$Plot$Grid = function (a) {
-	return {ctor: 'Grid', _0: a};
-};
-var _user$project$Plot$Axis = function (a) {
-	return {ctor: 'Axis', _0: a};
-};
-var _user$project$Plot$PlotStyle = function (a) {
-	return {ctor: 'PlotStyle', _0: a};
-};
-var _user$project$Plot$plotStyle = _user$project$Plot$PlotStyle;
-var _user$project$Plot$Size = function (a) {
-	return {ctor: 'Size', _0: a};
-};
-var _user$project$Plot$size = _user$project$Plot$Size;
-var _user$project$Plot$Padding = function (a) {
-	return {ctor: 'Padding', _0: a};
-};
-var _user$project$Plot$padding = _user$project$Plot$Padding;
-var _user$project$Plot$Dimensions = function (a) {
-	return {ctor: 'Dimensions', _0: a};
-};
-var _user$project$Plot$dimensions = _user$project$Plot$Dimensions;
-var _user$project$Plot$Y = {ctor: 'Y'};
-var _user$project$Plot$X = {ctor: 'X'};
-var _user$project$Plot$defaultGridConfig = {
-	ticks: _elm_lang$core$Native_List.fromArray(
-		[]),
-	styles: _elm_lang$core$Native_List.fromArray(
-		[
-			{ctor: '_Tuple2', _0: 'stroke', _1: '#757575'}
-		]),
-	orientation: _user$project$Plot$X
-};
-var _user$project$Plot$verticalGrid = function (attrs) {
-	return _user$project$Plot$Grid(
-		A3(_elm_lang$core$List$foldr, _user$project$Plot$toGridConfig, _user$project$Plot$defaultGridConfig, attrs));
-};
-var _user$project$Plot$horizontalGrid = function (attrs) {
-	var defaultGridConfigY = _elm_lang$core$Native_Utils.update(
-		_user$project$Plot$defaultGridConfig,
-		{orientation: _user$project$Plot$Y});
-	return _user$project$Plot$Grid(
-		A3(_elm_lang$core$List$foldr, _user$project$Plot$toGridConfig, defaultGridConfigY, attrs));
-};
-var _user$project$Plot$viewPlot = F2(
-	function (attrs, elements) {
-		var _p40 = _elm_lang$core$List$unzip(
-			A3(
-				_elm_lang$core$List$foldr,
-				_user$project$Plot$collectPoints,
-				_elm_lang$core$Native_List.fromArray(
-					[]),
-				elements));
-		var xValues = _p40._0;
-		var yValues = _p40._1;
-		var plotConfig = A3(_elm_lang$core$List$foldr, _user$project$Plot$toPlotConfig, _user$project$Plot$defaultPlotConfig, attrs);
-		var _p41 = plotConfig.size;
-		var width = _p41._0;
-		var height = _p41._1;
-		var xAxis = A4(
-			_user$project$Plot$calculateAxis,
-			_user$project$Plot$X,
-			width,
-			{ctor: '_Tuple2', _0: 0, _1: 0},
-			xValues);
-		var yAxis = A4(_user$project$Plot$calculateAxis, _user$project$Plot$Y, height, plotConfig.padding, yValues);
-		var toSvgCoordsX = function (_p42) {
-			var _p43 = _p42;
-			return {
-				ctor: '_Tuple2',
-				_0: xAxis.toSvg(_p43._0),
-				_1: yAxis.toSvg(0 - _p43._1)
-			};
-		};
-		var toSvgCoordsY = function (_p44) {
-			return toSvgCoordsX(
-				_user$project$Plot$flipToY(_p44));
-		};
-		var elementViews = A3(
-			_elm_lang$core$List$foldr,
-			A4(_user$project$Plot$viewElements, xAxis, yAxis, toSvgCoordsX, toSvgCoordsY),
-			_elm_lang$core$Native_List.fromArray(
-				[]),
-			elements);
-		return A2(_user$project$Plot$viewFrame, plotConfig, elementViews);
-	});
-var _user$project$Plot$plot = F2(
-	function (attrs, elements) {
-		return A3(_elm_lang$svg$Svg_Lazy$lazy2, _user$project$Plot$viewPlot, attrs, elements);
-	});
-var _user$project$Plot$TickList = function (a) {
-	return {ctor: 'TickList', _0: a};
-};
-var _user$project$Plot$TickAmount = function (a) {
-	return {ctor: 'TickAmount', _0: a};
-};
-var _user$project$Plot$defaultAxisConfig = {
-	tickConfig: _user$project$Plot$TickAmount(10),
-	customViewTick: _user$project$Plot$defaultTickHtml(_user$project$Plot$X),
-	customViewLabel: _user$project$Plot$defaultLabelHtml(_user$project$Plot$X),
-	axisLineStyle: _elm_lang$core$Native_List.fromArray(
-		[
-			{ctor: '_Tuple2', _0: 'stroke', _1: '#757575'}
-		]),
-	orientation: _user$project$Plot$X
-};
-var _user$project$Plot$xAxis = function (attrs) {
-	return _user$project$Plot$Axis(
-		A3(_elm_lang$core$List$foldr, _user$project$Plot$toAxisConfig, _user$project$Plot$defaultAxisConfig, attrs));
-};
-var _user$project$Plot$yAxis = function (attrs) {
-	var defaultAxisConfigY = _elm_lang$core$Native_Utils.update(
-		_user$project$Plot$defaultAxisConfig,
-		{
-			orientation: _user$project$Plot$Y,
-			customViewLabel: _user$project$Plot$defaultLabelHtml(_user$project$Plot$Y),
-			customViewTick: _user$project$Plot$defaultTickHtml(_user$project$Plot$Y)
-		});
-	return _user$project$Plot$Axis(
-		A3(_elm_lang$core$List$foldr, _user$project$Plot$toAxisConfig, defaultAxisConfigY, attrs));
-};
-var _user$project$Plot$TickStep = function (a) {
-	return {ctor: 'TickStep', _0: a};
-};
-var _user$project$Plot$AxisLineStyle = function (a) {
-	return {ctor: 'AxisLineStyle', _0: a};
-};
-var _user$project$Plot$axisLineStyle = _user$project$Plot$AxisLineStyle;
-var _user$project$Plot$ViewLabel = function (a) {
-	return {ctor: 'ViewLabel', _0: a};
-};
-var _user$project$Plot$customViewLabel = _user$project$Plot$ViewLabel;
-var _user$project$Plot$ViewTick = function (a) {
-	return {ctor: 'ViewTick', _0: a};
-};
-var _user$project$Plot$customViewTick = _user$project$Plot$ViewTick;
-var _user$project$Plot$TickConfigAttr = function (a) {
-	return {ctor: 'TickConfigAttr', _0: a};
-};
-var _user$project$Plot$amountOfTicks = function (amount) {
-	return _user$project$Plot$TickConfigAttr(
-		_user$project$Plot$TickAmount(amount));
-};
-var _user$project$Plot$stepSize = function (stepSize) {
-	return _user$project$Plot$TickConfigAttr(
-		_user$project$Plot$TickStep(stepSize));
-};
-var _user$project$Plot$tickList = function (ticks) {
-	return _user$project$Plot$TickConfigAttr(
-		_user$project$Plot$TickList(ticks));
-};
-var _user$project$Plot$GridTicks = function (a) {
-	return {ctor: 'GridTicks', _0: a};
-};
-var _user$project$Plot$gridTickList = _user$project$Plot$GridTicks;
-var _user$project$Plot$GridStyle = function (a) {
-	return {ctor: 'GridStyle', _0: a};
-};
-var _user$project$Plot$gridStyle = _user$project$Plot$GridStyle;
-var _user$project$Plot$AreaStyle = function (a) {
-	return {ctor: 'AreaStyle', _0: a};
-};
-var _user$project$Plot$areaStyle = _user$project$Plot$AreaStyle;
-var _user$project$Plot$LineStyle = function (a) {
-	return {ctor: 'LineStyle', _0: a};
-};
-var _user$project$Plot$lineStyle = function (style) {
-	return _user$project$Plot$LineStyle(
-		A2(
-			_elm_lang$core$List_ops['::'],
-			{ctor: '_Tuple2', _0: 'fill', _1: 'transparent'},
-			style));
-};
 var _user$project$Github$githubStarButton = function (params) {
 	var iframeHeight = _elm_lang$core$Native_Utils.eq(params.size, 'small') ? 20 : 30;
 	var iframeWidth = _elm_lang$core$Native_Utils.eq(params.size, 'small') ? 170 : 160;
@@ -10510,14 +10510,14 @@ var _user$project$Elmalytics$plotView = function (totalsByMonth) {
 				}),
 			totalsByMonth));
 	return A2(
-		_user$project$Plot$plot,
+		_terezka$elm_plot$Plot$plot,
 		_elm_lang$core$Native_List.fromArray(
 			[
-				_user$project$Plot$size(
+				_terezka$elm_plot$Plot$size(
 				{ctor: '_Tuple2', _0: 800, _1: 400}),
-				_user$project$Plot$padding(
+				_terezka$elm_plot$Plot$padding(
 				{ctor: '_Tuple2', _0: 0, _1: 20}),
-				_user$project$Plot$plotStyle(
+				_terezka$elm_plot$Plot$plotStyle(
 				_elm_lang$core$Native_List.fromArray(
 					[
 						{ctor: '_Tuple2', _0: 'padding', _1: '0px 40px 60px 60px'},
@@ -10527,37 +10527,37 @@ var _user$project$Elmalytics$plotView = function (totalsByMonth) {
 		_elm_lang$core$Native_List.fromArray(
 			[
 				A2(
-				_user$project$Plot$line,
+				_terezka$elm_plot$Plot$line,
 				_elm_lang$core$Native_List.fromArray(
 					[
-						_user$project$Plot$lineStyle(
+						_terezka$elm_plot$Plot$lineStyle(
 						_elm_lang$core$Native_List.fromArray(
 							[
 								{ctor: '_Tuple2', _0: 'stroke', _1: '#b6c9ef'}
 							]))
 					]),
 				plotData),
-				_user$project$Plot$xAxis(
+				_terezka$elm_plot$Plot$xAxis(
 				_elm_lang$core$Native_List.fromArray(
 					[
-						_user$project$Plot$axisLineStyle(
+						_terezka$elm_plot$Plot$axisLineStyle(
 						_elm_lang$core$Native_List.fromArray(
 							[
 								{ctor: '_Tuple2', _0: 'stroke', _1: '#7F7F7F'}
 							])),
-						_user$project$Plot$amountOfTicks(
+						_terezka$elm_plot$Plot$amountOfTicks(
 						_elm_lang$core$Array$length(totalsByMonth)),
-						_user$project$Plot$customViewLabel(customLabel)
+						_terezka$elm_plot$Plot$customViewLabel(customLabel)
 					])),
-				_user$project$Plot$yAxis(
+				_terezka$elm_plot$Plot$yAxis(
 				_elm_lang$core$Native_List.fromArray(
 					[
-						_user$project$Plot$axisLineStyle(
+						_terezka$elm_plot$Plot$axisLineStyle(
 						_elm_lang$core$Native_List.fromArray(
 							[
 								{ctor: '_Tuple2', _0: 'stroke', _1: '#b9b9b9'}
 							])),
-						_user$project$Plot$customViewLabel(customYAxisLabel)
+						_terezka$elm_plot$Plot$customViewLabel(customYAxisLabel)
 					]))
 			]));
 };
