@@ -29,15 +29,15 @@ dataSources :
   }
 dataSources =
   { numReposCreatedPerMonth =
-    "http://elmalytics-backend.michaelbylstra.com/static/json/formattedNumReposCreatedPerMonth.json"
+    "https://elmalytics-backend.michaelbylstra.com/static/json/formattedNumReposCreatedPerMonth.json"
   , numCommitsPerMonth =
-    "http://elmalytics-backend.michaelbylstra.com/static/json/formattedNumCommitsPerMonth.json"
+    "https://elmalytics-backend.michaelbylstra.com/static/json/formattedNumCommitsPerMonth.json"
   , mostStarredRepos =
-    "http://elmalytics-backend.michaelbylstra.com/static/json/mostStarredRepos.json"
+    "https://elmalytics-backend.michaelbylstra.com/static/json/mostStarredRepos.json"
   , mostReposCreated =
-    "http://elmalytics-backend.michaelbylstra.com/static/json/mostReposCreated.json"
+    "https://elmalytics-backend.michaelbylstra.com/static/json/mostReposCreated.json"
   , mostStarsForRepos =
-    "http://elmalytics-backend.michaelbylstra.com/static/json/mostStarsForRepos.json"
+    "https://elmalytics-backend.michaelbylstra.com/static/json/mostStarsForRepos.json"
   }
 
 type alias TotalsByMonth =
